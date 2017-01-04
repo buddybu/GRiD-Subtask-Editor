@@ -12,7 +12,7 @@ namespace GRiD_Subtask_Editor
     [Serializable]
     public partial class AddSubtask : Form
     {
-
+        private string defaultTitle;
         private List<string> usernameList = new List<string>();
         private SourceGrid.Cells.Editors.ComboBox assigneeEditor = null;
         private List<SubtaskItem> subtaskList = null;
@@ -21,6 +21,7 @@ namespace GRiD_Subtask_Editor
         private Jira jira;
         internal Issue ParentIssue;
         private int numberSubtasks;
+        private bool bCreateSubtaskDone;
 
         internal List<SubtaskItem> SubtaskList
         {
@@ -46,6 +47,7 @@ namespace GRiD_Subtask_Editor
         public AddSubtask()
         {
             InitializeComponent();
+            defaultTitle = this.Text;
         }
 
         /*
@@ -57,6 +59,9 @@ namespace GRiD_Subtask_Editor
          */
         private void AddSubtask_Load(object sender, EventArgs e)
         {
+            // set the title of the dialog
+            this.Text = defaultTitle + " for  " + ParentIssue.Key.ToString();
+
             assigneeEditor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
             assigneeEditor.StandardValues = usernameList.ToArray();
             assigneeEditor.EditableMode = SourceGrid.EditableMode.Focus | SourceGrid.EditableMode.SingleClick | SourceGrid.EditableMode.AnyKey;
@@ -316,12 +321,16 @@ namespace GRiD_Subtask_Editor
         /*
          *  Create subtask button handler.  This creates the background worker thread.
          */
-        private async void btnCreateSubtasks_Click(object sender, EventArgs e)
+        private void btnCreateSubtasks_Click(object sender, EventArgs e)
         {
 
             var progress = new Progress<int>(percent =>
             {
+                if (percent == 100)
+                    bCreateSubtaskDone = true;
                 progressBar1.Value = percent;
+                progressBar1.Update();
+                lblStatus.Text = percent.ToString() + "%";
             });
 
             // save list of rows to settings as default
@@ -332,18 +341,18 @@ namespace GRiD_Subtask_Editor
             btnTemplate.Enabled = false;
             btnDone.Enabled = false;
 
+            bCreateSubtaskDone = false;
+
             subtasksCreated = 0;
             numberSubtasks = SubtasksAddCount();
 
 
             if (numberSubtasks > 0)
             {
-                var task = new Task(() => CreateSubtasks(progress, numberSubtasks));
-                //                var task = Task.Run(() => CreateSubtasks(progress, numberSubtasks));
+                Task task = new Task(() => CreateSubtasks(progress, numberSubtasks));
 
-
-                task.Start();              
-                await task;
+                task.Start();
+                task.Wait();
 
                 // enable buttons which were disabled when subtask creation began.
                 btnDone.Enabled = true;
