@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using Atlassian.Jira;
 using System.Xml.Serialization;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace GRiD_Subtask_Editor
 {
@@ -274,52 +275,55 @@ namespace GRiD_Subtask_Editor
          */
         private async void subtaskCreateWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            BackgroundWorker worker = sender as BackgroundWorker;
+        }
 
+        private async void CreateSubtasks(IProgress<int> progress, int numberSubtasksToCreate)
+        {
+            int subtasksCreated = 0;
             foreach (SubtaskItem item in subtaskList)
             {
-                if (worker.CancellationPending == true)
+                if (item.AddSubtask.HasValue && item.AddSubtask == true)
                 {
-                    e.Cancel = true;
-                    break;
-                }
-                else
-                {
-                    if (item.AddSubtask.HasValue && item.AddSubtask == true)
-                    {
+                    Issue subtask = jira.CreateIssue(ParentIssue.Project, ParentIssue.Key.ToString());
 
-                        Issue subtask = jira.CreateIssue(ParentIssue.Project, ParentIssue.Key.ToString());
+                    subtask.Type = "5";
+                    subtask.Summary = item.Summary;
+                    subtask.Description = item.Description;
+                    subtask.Assignee = item.Assignee;
+                    foreach (ProjectComponent pc in ParentIssue.Components)
+                        subtask.Components.Add(pc);
 
-                        subtask.Type = "5";
-                        subtask.Summary = item.Summary;
-                        subtask.Description = item.Description;
-                        subtask.Assignee = item.Assignee;
-                        foreach (ProjectComponent pc in ParentIssue.Components)
-                            subtask.Components.Add(pc);
+                    await subtask.SaveChangesAsync();
 
-                        await subtask.SaveChangesAsync();
+                    // set the time estimate
+                    var editList = new List<object>();
+                    editList.Add(new { edit = new { originalEstimate = item.Estimate + "h" } });
+                    var myObject = new { fields = new { timetracking = new { originalEstimate = item.Estimate + "h" } } };
+                    var url = "/rest/api/2/issue/" + subtask.Key.ToString();
+                    await jira.RestClient.ExecuteRequestAsync(RestSharp.Method.PUT, url, myObject);
+                    subtasksCreated++;
 
-                        // set the time estimate
-                        var editList = new List<object>();
-                        editList.Add(new { edit = new { originalEstimate = item.Estimate + "h" } });
-                        var myObject = new { fields = new { timetracking = new { originalEstimate = item.Estimate + "h" } } };
-                        var url = "/rest/api/2/issue/" + subtask.Key.ToString();
-                        await jira.RestClient.ExecuteRequestAsync(RestSharp.Method.PUT, url, myObject);
+                    int percent = (int)((subtasksCreated / (double)numberSubtasksToCreate) * 100.0);
+                    progress.Report(percent);
+                    System.Threading.Thread.Sleep(500);
 
-                        subtasksCreated++;
-                        worker.ReportProgress((int)(((double)subtasksCreated / (double)numberSubtasks) * 100.0));
-
-                    }
                 }
             }
+
 
         }
 
         /*
          *  Create subtask button handler.  This creates the background worker thread.
          */
-        private void btnCreateSubtasks_Click(object sender, EventArgs e)
+        private async void btnCreateSubtasks_Click(object sender, EventArgs e)
         {
+
+            var progress = new Progress<int>(percent =>
+            {
+                progressBar1.Value = percent;
+            });
+
             // save list of rows to settings as default
             // save list of rows to local variable to be accessible from main page
 
@@ -334,23 +338,36 @@ namespace GRiD_Subtask_Editor
 
             if (numberSubtasks > 0)
             {
-                subtaskCreateWorker.RunWorkerAsync();
+                var task = new Task(() => CreateSubtasks(progress, numberSubtasks));
+                //                var task = Task.Run(() => CreateSubtasks(progress, numberSubtasks));
+
+
+                task.Start();              
+                await task;
+
+                // enable buttons which were disabled when subtask creation began.
+                btnDone.Enabled = true;
+                btnTemplate.Enabled = true;
+                btnAddRow.Enabled = true;
+
             }
 
+
+        }
+
+        /*
+         *  This mehod takes a list of users and stores it. 
+         */
+        internal void SetUserCombo(List<string> userList)
+        {
+            foreach (var user in userList)
+            {
+                usernameList.Add(user);
+            }
 
         }
     }
 }
 
-/*
- *  This mehod takes a list of users and stores it. 
- */
-internal void SetUserCombo(List<string> userList)
-{
-    foreach (var user in userList)
-    {
-        usernameList.Add(user);
-    }
 
-}
 
