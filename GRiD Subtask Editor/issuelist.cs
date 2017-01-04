@@ -20,6 +20,7 @@ namespace GRiD_Subtask_Editor
 
         List<Issue> myIssues = new List<Issue>();
         private bool bForceUserUpdate;
+        private Issue parentIssue = null;
 
         public List<string> UserList
         {
@@ -224,20 +225,28 @@ namespace GRiD_Subtask_Editor
                         issueGrid.Rows.Insert(index);
                         issueGrid[index, 0] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Key.ToString()) ? issue.Key.ToString() : ""), typeof(string));
                         issueGrid[index, 0].View = viewNormal;
+                        issueGrid[index, 0].Editor = null;
                         issueGrid[index, 1] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Type.ToString()) ? issue.Type.ToString() : ""), typeof(string));
                         issueGrid[index, 1].View = viewNormal;
+                        issueGrid[index, 1].Editor = null;
                         issueGrid[index, 2] = new SourceGrid.Cells.Cell(issue["Story Points"].ToString());
                         issueGrid[index, 2].View = viewNormal;
+                        issueGrid[index, 2].Editor = null;
                         issueGrid[index, 3] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Summary) ? issue.Summary.ToString() : ""), typeof(string));
                         issueGrid[index, 3].View = viewNormal;
+                        issueGrid[index, 3].Editor = null;
                         issueGrid[index, 4] = new SourceGrid.Cells.Cell(issue.Priority);
                         issueGrid[index, 4].View = viewNormal;
+                        issueGrid[index, 4].Editor = null;
                         issueGrid[index, 5] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Status.ToString()) ? issue.Status.ToString() : ""), typeof(string));
                         issueGrid[index, 5].View = viewNormal;
+                        issueGrid[index, 5].Editor = null;
                         issueGrid[index, 6] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Assignee) ? issue.Assignee.ToString() : ""), typeof(string));
                         issueGrid[index, 6].View = viewNormal;
+                        issueGrid[index, 6].Editor = null;
                         issueGrid[index, 7] = new SourceGrid.Cells.Cell(issue.Created, typeof(DateTime));
                         issueGrid[index, 7].View = viewNormal;
+                        issueGrid[index, 7].Editor = null;
 
                         index++;
                     }
@@ -271,6 +280,8 @@ namespace GRiD_Subtask_Editor
             }
 
             Properties.Settings.Default.JiraUsernames = UserList;
+            Properties.Settings.Default.Save();
+            Properties.Settings.Default.Reload();
         }
 
         private void issueGrid_DoubleClick(object sender, EventArgs e)
@@ -283,7 +294,7 @@ namespace GRiD_Subtask_Editor
 
 
             string Key = issueGrid[issueGrid.Selection.ActivePosition.Row, 0].ToString();
-            Issue parentIssue = null;
+            parentIssue = null;
 
             foreach (Issue issue in myIssues)
             {
@@ -315,14 +326,19 @@ namespace GRiD_Subtask_Editor
                             subtaskGrid.Rows.Insert(index);
                             subtaskGrid[index, 0] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Key.ToString()) ? subtask.Key.ToString() : ""), typeof(string));
                             subtaskGrid[index, 0].View = viewNormal;
+                            subtaskGrid[index, 0].Editor = null;
                             subtaskGrid[index, 1] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Summary) ? subtask.Summary.ToString() : ""), typeof(string));
                             subtaskGrid[index, 1].View = viewNormal;
+                            subtaskGrid[index, 1].Editor = null;
                             subtaskGrid[index, 2] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Status.ToString()) ? subtask.Status.ToString() : ""), typeof(string));
                             subtaskGrid[index, 2].View = viewNormal;
+                            subtaskGrid[index, 2].Editor = null;
                             subtaskGrid[index, 3] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Assignee) ? subtask.Assignee.ToString() : ""), typeof(string));
                             subtaskGrid[index, 3].View = viewNormal;
+                            subtaskGrid[index, 3].Editor = null;
                             subtaskGrid[index, 4] = new SourceGrid.Cells.Cell(subtask.Created, typeof(DateTime));
                             subtaskGrid[index, 4].View = viewNormal;
+                            subtaskGrid[index, 4].Editor = null;
 
                             index++;
                         }
@@ -338,11 +354,21 @@ namespace GRiD_Subtask_Editor
 
         private void btnAddSubtask_Click(object sender, EventArgs e)
         {
-            // this will display the subtask dialog.
-            AddSubtask addSubtask = new AddSubtask();
+            if (parentIssue == null)
+            {
+                MessageBox.Show("Please select an issue!");
+                return;
+            }
+            else
+            {
+                // this will display the subtask dialog.
+                AddSubtask addSubtask = new AddSubtask();
+                addSubtask.Jira = jira;
+                addSubtask.ParentIssue = parentIssue;
 
-            addSubtask.SetUserCombo(UserList);
-            addSubtask.ShowDialog();
+                addSubtask.SetUserCombo(UserList);
+                addSubtask.ShowDialog();
+            }
         }
 
         private void cbUpdateUsers_CheckedChanged(object sender, EventArgs e)

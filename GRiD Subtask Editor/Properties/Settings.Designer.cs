@@ -69,5 +69,17 @@ namespace GRiD_Subtask_Editor.Properties {
                 this["JiraUsernames"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Template {
+            get {
+                return ((string)(this["Template"]));
+            }
+            set {
+                this["Template"] = value;
+            }
+        }
     }
 }

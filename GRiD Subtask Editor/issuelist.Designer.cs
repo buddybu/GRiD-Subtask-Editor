@@ -77,6 +77,7 @@
             // 
             // issueGrid
             // 
+            this.issueGrid.AcceptsInputChar = false;
             this.issueGrid.AutoSize = true;
             this.issueGrid.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.issueGrid.AutoStretchColumnsToFitWidth = true;
