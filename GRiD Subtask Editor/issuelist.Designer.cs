@@ -54,7 +54,7 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            this.pictureBox1.Click += new System.EventHandler(this.pbConfigure_Click);
             // 
             // btnConnect
             // 
@@ -83,6 +83,7 @@
             this.issueGrid.AutoStretchColumnsToFitWidth = true;
             this.issueGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.issueGrid.EnableSort = true;
+            this.issueGrid.ForeColor = System.Drawing.SystemColors.ControlText;
             this.issueGrid.Location = new System.Drawing.Point(0, 0);
             this.issueGrid.Name = "issueGrid";
             this.issueGrid.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
@@ -91,7 +92,7 @@
             this.issueGrid.TabIndex = 3;
             this.issueGrid.TabStop = true;
             this.issueGrid.ToolTipText = "";
-            this.issueGrid.Click += new System.EventHandler(this.issueGrid_DoubleClick);
+            this.issueGrid.Click += new System.EventHandler(this.issueGrid_Click);
             // 
             // panel2
             // 

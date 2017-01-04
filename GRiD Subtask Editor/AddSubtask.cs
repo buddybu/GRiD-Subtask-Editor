@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Atlassian.Jira;
-using Atlassian.Jira.Remote;
-using SourceGrid;
 using System.Xml.Serialization;
 using System.IO;
 
@@ -54,10 +47,15 @@ namespace GRiD_Subtask_Editor
             InitializeComponent();
         }
 
+        /*
+         *  Handle form load event
+         *      Creates the editor for the grid
+         *      Creates the grid
+         *      Initializes the header row
+         *      If saved template is available, load the template
+         */
         private void AddSubtask_Load(object sender, EventArgs e)
         {
-//            Properties.Settings.Default.Reload();
-
             assigneeEditor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
             assigneeEditor.StandardValues = usernameList.ToArray();
             assigneeEditor.EditableMode = SourceGrid.EditableMode.Focus | SourceGrid.EditableMode.SingleClick | SourceGrid.EditableMode.AnyKey;
@@ -83,11 +81,15 @@ namespace GRiD_Subtask_Editor
                 StringReader xmlTemplate = new StringReader(Properties.Settings.Default.Template);
                 XmlSerializer xs = new XmlSerializer(template.GetType());
 
+                // template is stored in settings as an XML object, so we must deserialize it into a list.
                 template = (List<SubtaskItem>)xs.Deserialize(xmlTemplate);
 
+                // only process the template if it is not empty.
                 if (template != null && template.Count > 0)
                 {
                     int i = 1;
+
+                    // add each item from the template to the grid.
                     foreach (SubtaskItem item in template)
                     {
                         gridNewSubtask.Rows.Insert(i);
@@ -109,28 +111,56 @@ namespace GRiD_Subtask_Editor
             gridNewSubtask.AutoSizeCells();
         }
 
+        /*
+         *  Method to handle the add row button event
+         *  
+         *  This will add a new uninitialized row to the new subtask grid.
+         */
         private void btnAddRow_Click(object sender, EventArgs e)
         {
+            // get the current row count
             int index = gridNewSubtask.Rows.Count;
 
+            // insert a new row at this position
             gridNewSubtask.Rows.Insert(index);
 
-            gridNewSubtask[index, 0] = new SourceGrid.Cells.CheckBox(null, true);
+            // set default values
+            gridNewSubtask[index, 0] = new SourceGrid.Cells.CheckBox(null, false);
             gridNewSubtask[index, 1] = new SourceGrid.Cells.Cell("", typeof(string));
             gridNewSubtask[index, 2] = new SourceGrid.Cells.Cell("", typeof(string));
             gridNewSubtask[index, 3] = new SourceGrid.Cells.Cell("", assigneeEditor);
             gridNewSubtask[index, 3].View = SourceGrid.Cells.Views.ComboBox.Default;
-            gridNewSubtask[index, 3].Value = "john.burnham";
+            gridNewSubtask[index, 3].Value = "";
             gridNewSubtask[index, 4] = new SourceGrid.Cells.Cell(0, typeof(double));
 
             gridNewSubtask.AutoSizeCells();
+
+            if (btnCreateSubtasks.Enabled == false)
+                btnCreateSubtasks.Enabled = true;
         }
 
+        /*
+         *  Done button handler
+         */
         private void btnDone_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
         }
 
+        /*
+         *  Cancel button handler
+         */
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            // cancel subtask creation if in progress
+            if (subtaskCreateWorker != null && subtaskCreateWorker.IsBusy)
+                subtaskCreateWorker.CancelAsync();
+            DialogResult = DialogResult.Cancel;
+        }
+
+        /*
+         *  This method counts how many subtasks are marked "add" 
+         */
         private int SubtasksAddCount()
         {
             var subtaskCount = 0;
@@ -147,126 +177,102 @@ namespace GRiD_Subtask_Editor
             return subtaskCount;
         }
 
-        private void SaveSubtaskToTemplate()
+        /*
+         *  This method converts the subtask grid to a subtask list
+         */
+        private void SaveSubtaskToList()
         {
             subtaskList = new List<SubtaskItem>();
             SubtaskItem subtaskItem;
 
-            // check to see if new subtasks has any subtasks to save
+            //  check to see if new subtasks has any subtasks to save
             if (gridNewSubtask.Rows.Count > 1)
             {
-                for (int i = 0; i < gridNewSubtask.Rows.Count - 1; i++)
+                //  convert each grid row to an item and add it to the list
+                for (int i = 1; i < gridNewSubtask.Rows.Count; i++)
                 {
                     subtaskItem = new SubtaskItem();
 
                     SourceGrid.Cells.CheckBox chkBox = new SourceGrid.Cells.CheckBox(null, false);
-                    chkBox = (SourceGrid.Cells.CheckBox)gridNewSubtask[i + 1, 0];
+                    chkBox = (SourceGrid.Cells.CheckBox)gridNewSubtask[i, 0];
 
                     subtaskItem.AddSubtask = chkBox.Checked;
-                    subtaskItem.Summary = (string)gridNewSubtask[i + 1, 1].Value;
-                    subtaskItem.Description = (string)gridNewSubtask[i + 1, 2].Value;
-                    subtaskItem.Assignee = (string)gridNewSubtask[i + 1, 3].Value;
-                    subtaskItem.Estimate = (double)gridNewSubtask[i + 1, 4].Value;
+                    subtaskItem.Summary = (string)gridNewSubtask[i, 1].Value;
+                    subtaskItem.Description = (string)gridNewSubtask[i, 2].Value;
+                    subtaskItem.Assignee = (string)gridNewSubtask[i, 3].Value;
+                    subtaskItem.Estimate = (double)gridNewSubtask[i, 4].Value;
 
                     subtaskList.Add(subtaskItem);
                 }
             }
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            subtaskCreateWorker.CancelAsync();
-            DialogResult = DialogResult.Cancel;
-        }
-
-        internal void SetUserCombo(List<string> userList)
-        {
-            foreach(var user in userList)
-            {
-                usernameList.Add(user);
-            }
-
-        }
-
+        /*
+         *  Handler for template button
+         *      Converts the subtask list to XML and saves it into the settings.
+         */
         private void btnTemplate_Click(object sender, EventArgs e)
         {
-            SaveSubtaskToTemplate();
+            // build subtask list
+            SaveSubtaskToList();
 
-            StringWriter sw = new StringWriter();
+            // generate XML serializer for subtask list
+            StringWriter stringWriter = new StringWriter();
+            XmlSerializer subtaskListSerializer = new XmlSerializer(subtaskList.GetType());
 
-            XmlSerializer s = new XmlSerializer(subtaskList.GetType());
+            // serialize the subtask list using the string writer
+            subtaskListSerializer.Serialize(stringWriter, subtaskList);
 
-            s.Serialize(sw, subtaskList);
-
-            Properties.Settings.Default.Template = sw.ToString();
-
+            // save the XML string to the settings
+            Properties.Settings.Default.Template = stringWriter.ToString();
             Properties.Settings.Default.Save();
             Properties.Settings.Default.Reload();
 
         }
 
-        internal void AddSubtasksToIssue(Jira jira, Issue parentIssue)
-        {
-            if (parentIssue != null)
-            {
-
-                foreach (SubtaskItem item in subtaskList)
-                {
-
-                    if (item.AddSubtask.HasValue && item.AddSubtask == true)
-                    {
-#if BUD
-                        Issue subtask = jira.CreateIssue(parentIssue.Project, parentIssue.Key.ToString());
-                        subtask.Type = "5";
-                        subtask.Summary = item.Summary;
-                        subtask.Description = item.Description;
-                        subtask.Assignee = item.Assignee;
-                        foreach (ProjectComponent pc in parentIssue.Components)
-                            subtask.Components.Add(pc);
-
-                        await subtask.SaveChangesAsync();
-
-
-                        // set the time estimate
-                        var editList = new List<object>();
-                        editList.Add(new { edit = new { originalEstimate = item.Estimate + "h"} });
-                        var myObject = new { fields = new { timetracking = new { originalEstimate = item.Estimate + "h" } } };
-                        var url = "/rest/api/2/issue/" + subtask.Key.ToString();
-                        await jira.RestClient.ExecuteRequestAsync(RestSharp.Method.PUT, url, myObject);
-#else
-                        System.Threading.Thread.Sleep(500);
-#endif
-                    }
-                }
-            }
-        }
-
+        /*
+         *  Background worker progress change handler to display progress for subtask creation in Jira
+         */
         private void subtaskCreateWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             this.progressBar1.Value = e.ProgressPercentage;
             lblStatus.Text = e.ProgressPercentage.ToString() + " %";
         }
 
+        /*
+         *  Background worker run completion handler to handle errors, cancellation and success.
+         */
         private void subtaskCreateWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            //  if ended in error, show message and set status
             if (e.Error != null)
             {
                 MessageBox.Show(e.Error.Message);
                 lblStatus.Text = "ERROR!";
             }
+
+            // if cancelled, set status
             else if(e.Cancelled)
             {
                 lblStatus.Text = "Cancelled!";
             }
+
+            // if success, set status
             else
             {
                 lblStatus.Text = "Success!";
             }
+
+            // enable buttons which were disabled when subtask creation began.
             btnDone.Enabled = true;
-            btnCreateSubtasks.Enabled = false;
+            btnTemplate.Enabled = true;
+            btnAddRow.Enabled = true;
         }
 
-        private  void subtaskCreateWorker_DoWork(object sender, DoWorkEventArgs e)
+        /*
+         *  Background worker work handler which creates each subtask in Jira.
+         */
+        private async void subtaskCreateWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
 
@@ -281,7 +287,7 @@ namespace GRiD_Subtask_Editor
                 {
                     if (item.AddSubtask.HasValue && item.AddSubtask == true)
                     {
-#if BUD
+
                         Issue subtask = jira.CreateIssue(ParentIssue.Project, ParentIssue.Key.ToString());
 
                         subtask.Type = "5";
@@ -299,11 +305,9 @@ namespace GRiD_Subtask_Editor
                         var myObject = new { fields = new { timetracking = new { originalEstimate = item.Estimate + "h" } } };
                         var url = "/rest/api/2/issue/" + subtask.Key.ToString();
                         await jira.RestClient.ExecuteRequestAsync(RestSharp.Method.PUT, url, myObject);
-#else
-                        System.Threading.Thread.Sleep(500);
-#endif
+
                         subtasksCreated++;
-                        worker.ReportProgress( (int) (((double)subtasksCreated / (double)numberSubtasks) * 100.0) );
+                        worker.ReportProgress((int)(((double)subtasksCreated / (double)numberSubtasks) * 100.0));
 
                     }
                 }
@@ -311,12 +315,15 @@ namespace GRiD_Subtask_Editor
 
         }
 
+        /*
+         *  Create subtask button handler.  This creates the background worker thread.
+         */
         private void btnCreateSubtasks_Click(object sender, EventArgs e)
         {
             // save list of rows to settings as default
             // save list of rows to local variable to be accessible from main page
 
-            SaveSubtaskToTemplate();
+            SaveSubtaskToList();
             btnAddRow.Enabled = false;
             btnTemplate.Enabled = false;
             btnDone.Enabled = false;
@@ -334,3 +341,16 @@ namespace GRiD_Subtask_Editor
         }
     }
 }
+
+/*
+ *  This mehod takes a list of users and stores it. 
+ */
+internal void SetUserCombo(List<string> userList)
+{
+    foreach (var user in userList)
+    {
+        usernameList.Add(user);
+    }
+
+}
+
