@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Atlassian.Jira;
-
+using System.Text.RegularExpressions;
 
 namespace GRiD_Subtask_Editor
 {
@@ -223,6 +223,12 @@ namespace GRiD_Subtask_Editor
         {
             ServerConfig sc = new ServerConfig();
             sc.ShowDialog();
+            //  if we have a server URL saved, enable the connect button
+            if (!String.IsNullOrWhiteSpace(Properties.Settings.Default.ServerURL))
+            {
+                btnConnect.Enabled = true;
+            }
+
         }
 
         /*
@@ -332,12 +338,6 @@ namespace GRiD_Subtask_Editor
          */
         private void issueGrid_Click(object sender, EventArgs e)
         {
-            //  if there are subtasks listed from another task, clear them
-            if (subtaskGrid.Rows.Count > 1)
-            {
-                subtaskGrid.Redim(1, 5);
-            }
-
             //  check to see if the selected row is valid
             if (issueGrid.Selection.ActivePosition.Row >= 0 &&
                 issueGrid.Selection.ActivePosition.Row < issueGrid.Rows.Count)
@@ -361,44 +361,57 @@ namespace GRiD_Subtask_Editor
                 // if we have a valid parent, get the subtasks.
                 if (parentIssue != null)
                 {
-
-                    var subtasks = parentIssue.GetSubTasksAsync().Result;
-                    try
-                    {
-                        // if we received subtasks, place them in the subtask grid
-                        if (subtasks.Count() > 0)
-                        {
-                            int index = 1;
-                            foreach (Issue subtask in subtasks)
-                            {
-                                subtaskGrid.Rows.Insert(index);
-                                subtaskGrid[index, 0] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Key.ToString()) ? subtask.Key.ToString() : ""), typeof(string));
-                                subtaskGrid[index, 0].View = viewNormal;
-                                subtaskGrid[index, 0].Editor = null;
-                                subtaskGrid[index, 1] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Summary) ? subtask.Summary.ToString() : ""), typeof(string));
-                                subtaskGrid[index, 1].View = viewNormal;
-                                subtaskGrid[index, 1].Editor = null;
-                                subtaskGrid[index, 2] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Status.ToString()) ? subtask.Status.ToString() : ""), typeof(string));
-                                subtaskGrid[index, 2].View = viewNormal;
-                                subtaskGrid[index, 2].Editor = null;
-                                subtaskGrid[index, 3] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Assignee) ? subtask.Assignee.ToString() : ""), typeof(string));
-                                subtaskGrid[index, 3].View = viewNormal;
-                                subtaskGrid[index, 3].Editor = null;
-                                subtaskGrid[index, 4] = new SourceGrid.Cells.Cell(subtask.Created, typeof(DateTime));
-                                subtaskGrid[index, 4].View = viewNormal;
-                                subtaskGrid[index, 4].Editor = null;
-
-                                index++;
-                            }
-                            subtaskGrid.AutoSizeCells();
-                        }
-                    }
-                    catch
-                    {
-                        MessageBox.Show("No subtasks!");
-                    }
+                    tbETPLItem.Text = parentIssue.Key.ToString();
+                    tbDescription.Text = parentIssue.Summary.ToString();
+                    ShowSubTasks();
                 }
             }
+        }
+
+        private void ShowSubTasks()
+        {
+            //  if there are subtasks listed from another task, clear them
+            if (subtaskGrid.Rows.Count > 1)
+            {
+                subtaskGrid.Redim(1, 5);
+            }
+
+            var subtasks = parentIssue.GetSubTasksAsync().Result;
+            try
+            {
+                // if we received subtasks, place them in the subtask grid
+                if (subtasks.Count() > 0)
+                {
+                    int index = 1;
+                    foreach (Issue subtask in subtasks)
+                    {
+                        subtaskGrid.Rows.Insert(index);
+                        subtaskGrid[index, 0] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Key.ToString()) ? subtask.Key.ToString() : ""), typeof(string));
+                        subtaskGrid[index, 0].View = viewNormal;
+                        subtaskGrid[index, 0].Editor = null;
+                        subtaskGrid[index, 1] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Summary) ? subtask.Summary.ToString() : ""), typeof(string));
+                        subtaskGrid[index, 1].View = viewNormal;
+                        subtaskGrid[index, 1].Editor = null;
+                        subtaskGrid[index, 2] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Status.ToString()) ? subtask.Status.ToString() : ""), typeof(string));
+                        subtaskGrid[index, 2].View = viewNormal;
+                        subtaskGrid[index, 2].Editor = null;
+                        subtaskGrid[index, 3] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(subtask.Assignee) ? subtask.Assignee.ToString() : ""), typeof(string));
+                        subtaskGrid[index, 3].View = viewNormal;
+                        subtaskGrid[index, 3].Editor = null;
+                        subtaskGrid[index, 4] = new SourceGrid.Cells.Cell(subtask.Created, typeof(DateTime));
+                        subtaskGrid[index, 4].View = viewNormal;
+                        subtaskGrid[index, 4].Editor = null;
+
+                        index++;
+                    }
+                    subtaskGrid.AutoSizeCells();
+                }
+            }
+            catch
+            {
+                MessageBox.Show("No subtasks!");
+            }
+
         }
 
         /*
@@ -557,6 +570,73 @@ namespace GRiD_Subtask_Editor
             Properties.Settings.Default.Save();
             Properties.Settings.Default.Reload();
         }
+
+        private void btnUpdateTaskList_Click(object sender, EventArgs e)
+        {
+            bool isBadIssueId = true;
+
+            //  if we have a server URL saved, enable the connect button
+            if (!String.IsNullOrWhiteSpace(tbETPLItem.Text))
+            {
+                // see if the string is all numbers, if so conver
+                if (Regex.IsMatch(tbETPLItem.Text.ToString(), @"^\d+$"))
+                {
+                    // convert entry to ETPL-XXXX
+                    tbETPLItem.Text = "ETPL-" + tbETPLItem.Text;
+                }
+
+                parentIssue = getIssue(tbETPLItem.Text);
+                if (parentIssue != null)
+                {
+                    tbDescription.Text = parentIssue.Summary.ToString();
+                    ShowSubTasks();
+                    isBadIssueId = false;
+                }
+            }
+
+            if (isBadIssueId)
+            {
+                MessageBox.Show("Please enter a valid issue id!");
+            }
+        }
+
+        private void tbETPLItem_TextChanged(object sender, EventArgs e)
+        {
+            btnUpdateTaskList.Enabled = true;
+        }
+
+        private Issue getIssue(string key)
+        {
+            IOrderedQueryable<Issue> issues = null;
+            Issue foundIssue = null;
+
+            // Allow a maximum issues to be located.
+            // TODO:  Make this a configurable item
+            jira.MaxIssuesPerRequest = 100;
+
+            try
+            {
+                //  load the issues for the specified user from Jira.
+                //  TODO:   Make project configurable
+                //  TODO:   Make issue type selection configurable
+                issues = from issue in jira.Issues.Queryable
+                         where issue.Key == key
+                         orderby issue.Created
+                         select issue;
+
+                if (issues != null && issues.Count() > 0)
+                {
+                    foundIssue = issues.ElementAt(0);
+                }
+            }
+            catch
+            {
+                foundIssue = null;
+            }
+
+            return foundIssue;
+        }
+
 
     }
 }

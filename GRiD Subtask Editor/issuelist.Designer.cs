@@ -37,6 +37,10 @@
             this.Subtasks = new System.Windows.Forms.Label();
             this.btnAddSubtask = new System.Windows.Forms.Button();
             this.cbUpdateUsers = new System.Windows.Forms.CheckBox();
+            this.tbETPLItem = new System.Windows.Forms.TextBox();
+            this.btnUpdateTaskList = new System.Windows.Forms.Button();
+            this.tbDescription = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -97,7 +101,7 @@
             // panel2
             // 
             this.panel2.Controls.Add(this.subtaskGrid);
-            this.panel2.Location = new System.Drawing.Point(0, 291);
+            this.panel2.Location = new System.Drawing.Point(0, 338);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(787, 243);
             this.panel2.TabIndex = 6;
@@ -123,13 +127,13 @@
             this.Subtasks.AutoSize = true;
             this.Subtasks.Location = new System.Drawing.Point(23, 274);
             this.Subtasks.Name = "Subtasks";
-            this.Subtasks.Size = new System.Drawing.Size(51, 13);
+            this.Subtasks.Size = new System.Drawing.Size(113, 13);
             this.Subtasks.TabIndex = 7;
-            this.Subtasks.Text = "Subtasks";
+            this.Subtasks.Text = "Subtasks for GrIP Item";
             // 
             // btnAddSubtask
             // 
-            this.btnAddSubtask.Location = new System.Drawing.Point(146, 269);
+            this.btnAddSubtask.Location = new System.Drawing.Point(683, 268);
             this.btnAddSubtask.Name = "btnAddSubtask";
             this.btnAddSubtask.Size = new System.Drawing.Size(83, 23);
             this.btnAddSubtask.TabIndex = 8;
@@ -148,12 +152,53 @@
             this.cbUpdateUsers.UseVisualStyleBackColor = true;
             this.cbUpdateUsers.CheckedChanged += new System.EventHandler(this.cbUpdateUsers_CheckedChanged);
             // 
+            // tbETPLItem
+            // 
+            this.tbETPLItem.Location = new System.Drawing.Point(142, 270);
+            this.tbETPLItem.Name = "tbETPLItem";
+            this.tbETPLItem.Size = new System.Drawing.Size(123, 20);
+            this.tbETPLItem.TabIndex = 10;
+            this.tbETPLItem.TextChanged += new System.EventHandler(this.tbETPLItem_TextChanged);
+            // 
+            // btnUpdateTaskList
+            // 
+            this.btnUpdateTaskList.Enabled = false;
+            this.btnUpdateTaskList.Location = new System.Drawing.Point(271, 268);
+            this.btnUpdateTaskList.Name = "btnUpdateTaskList";
+            this.btnUpdateTaskList.Size = new System.Drawing.Size(112, 23);
+            this.btnUpdateTaskList.TabIndex = 11;
+            this.btnUpdateTaskList.Text = "Update Subtask List";
+            this.btnUpdateTaskList.UseVisualStyleBackColor = true;
+            this.btnUpdateTaskList.Click += new System.EventHandler(this.btnUpdateTaskList_Click);
+            // 
+            // tbDescription
+            // 
+            this.tbDescription.Location = new System.Drawing.Point(142, 296);
+            this.tbDescription.Name = "tbDescription";
+            this.tbDescription.ReadOnly = true;
+            this.tbDescription.Size = new System.Drawing.Size(624, 20);
+            this.tbDescription.TabIndex = 12;
+            this.tbDescription.WordWrap = false;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(86, 299);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(50, 13);
+            this.label1.TabIndex = 13;
+            this.label1.Text = "Summary";
+            // 
             // issueList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(788, 534);
+            this.ClientSize = new System.Drawing.Size(788, 593);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.tbDescription);
+            this.Controls.Add(this.btnUpdateTaskList);
+            this.Controls.Add(this.tbETPLItem);
             this.Controls.Add(this.cbUpdateUsers);
             this.Controls.Add(this.btnAddSubtask);
             this.Controls.Add(this.Subtasks);
@@ -186,6 +231,10 @@
         private System.Windows.Forms.Label Subtasks;
         private System.Windows.Forms.Button btnAddSubtask;
         private System.Windows.Forms.CheckBox cbUpdateUsers;
+        private System.Windows.Forms.TextBox tbETPLItem;
+        private System.Windows.Forms.Button btnUpdateTaskList;
+        private System.Windows.Forms.TextBox tbDescription;
+        private System.Windows.Forms.Label label1;
     }
 }
 

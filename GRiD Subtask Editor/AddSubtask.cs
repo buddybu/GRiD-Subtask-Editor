@@ -17,6 +17,7 @@ namespace GRiD_Subtask_Editor
         private SourceGrid.Cells.Editors.ComboBox assigneeEditor = null;
         private List<SubtaskItem> subtaskList = null;
         private int subtasksCreated;
+        private int numSubtasksToCreate;
 
         private Jira jira;
         internal Issue ParentIssue;
@@ -81,7 +82,7 @@ namespace GRiD_Subtask_Editor
             gridNewSubtask[0, 4] = new SourceGrid.Cells.ColumnHeader("TIME ESTIMATE");
 
             // check to see if settings has a saved template
-            if (Properties.Settings.Default.Template != null)
+            if (!String.IsNullOrWhiteSpace( Properties.Settings.Default.Template ))
             {
                 List<SubtaskItem> template = new List<SubtaskItem>();
                 StringReader xmlTemplate = new StringReader(Properties.Settings.Default.Template);
@@ -280,11 +281,17 @@ namespace GRiD_Subtask_Editor
          */
         private async void subtaskCreateWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            while (subtasksCreated < numSubtasksToCreate)
+            {
+                System.Threading.Thread.Sleep(500);
+            }
         }
 
         private async void CreateSubtasks(IProgress<int> progress, int numberSubtasksToCreate)
         {
-            int subtasksCreated = 0;
+            subtasksCreated = 0;
+            numSubtasksToCreate = numberSubtasksToCreate;
+
             foreach (SubtaskItem item in subtaskList)
             {
                 if (item.AddSubtask.HasValue && item.AddSubtask == true)
