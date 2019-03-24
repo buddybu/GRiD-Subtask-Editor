@@ -25,6 +25,8 @@ namespace GRiD_Subtask_Editor
         private void ServerConfig_Load(object sender, EventArgs e)
         {
             tbServerURL.Text = Properties.Settings.Default.ServerURL;
+            tbProjectName.Text = Properties.Settings.Default.ProjectName;
+            tbProjectPrefix.Text = Properties.Settings.Default.ProjectPrefix;
         }
 
         /*
@@ -43,6 +45,8 @@ namespace GRiD_Subtask_Editor
             else
             {
                 Properties.Settings.Default.ServerURL = tbServerURL.Text;
+                Properties.Settings.Default.ProjectName = tbProjectName.Text;
+                Properties.Settings.Default.ProjectPrefix = tbProjectPrefix.Text;
                 Properties.Settings.Default.Save();
                 DialogResult = DialogResult.OK;
             }

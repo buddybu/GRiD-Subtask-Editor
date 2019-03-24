@@ -81,5 +81,29 @@ namespace GRiD_Subtask_Editor.Properties {
                 this["Template"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ProjectName {
+            get {
+                return ((string)(this["ProjectName"]));
+            }
+            set {
+                this["ProjectName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ProjectPrefix {
+            get {
+                return ((string)(this["ProjectPrefix"]));
+            }
+            set {
+                this["ProjectPrefix"] = value;
+            }
+        }
     }
 }

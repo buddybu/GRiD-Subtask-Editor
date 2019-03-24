@@ -32,11 +32,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.tbServerURL = new System.Windows.Forms.TextBox();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbProjectName = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbProjectPrefix = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
-            this.btnOK.Location = new System.Drawing.Point(133, 76);
+            this.btnOK.Location = new System.Drawing.Point(133, 145);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -63,7 +67,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(214, 76);
+            this.btnCancel.Location = new System.Drawing.Point(214, 145);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 3;
@@ -71,13 +75,49 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(21, 66);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(71, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Project Name";
+            // 
+            // tbProjectName
+            // 
+            this.tbProjectName.Location = new System.Drawing.Point(98, 63);
+            this.tbProjectName.Name = "tbProjectName";
+            this.tbProjectName.Size = new System.Drawing.Size(191, 20);
+            this.tbProjectName.TabIndex = 5;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(23, 98);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(69, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Project Prefix";
+            // 
+            // tbProjectPrefix
+            // 
+            this.tbProjectPrefix.Location = new System.Drawing.Point(98, 95);
+            this.tbProjectPrefix.Name = "tbProjectPrefix";
+            this.tbProjectPrefix.Size = new System.Drawing.Size(191, 20);
+            this.tbProjectPrefix.TabIndex = 7;
+            // 
             // ServerConfig
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(301, 117);
+            this.ClientSize = new System.Drawing.Size(305, 180);
+            this.Controls.Add(this.tbProjectPrefix);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.tbProjectName);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.tbServerURL);
             this.Controls.Add(this.label1);
@@ -96,5 +136,9 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbServerURL;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbProjectName;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbProjectPrefix;
     }
 }

@@ -297,7 +297,12 @@ namespace GRiD_Subtask_Editor
                             issueGrid[index, 1] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Type.ToString()) ? issue.Type.ToString() : ""), typeof(string));
                             issueGrid[index, 1].View = viewNormal;
                             issueGrid[index, 1].Editor = null;
-                            issueGrid[index, 2] = new SourceGrid.Cells.Cell(issue["Story Points"].ToString());
+                            string storyPointsString = "";
+                            if (issue["Story Points"] != null)
+                            {
+                                storyPointsString = issue["Story Points"].ToString();
+                            }
+                            issueGrid[index, 2] = new SourceGrid.Cells.Cell(storyPointsString);
                             issueGrid[index, 2].View = viewNormal;
                             issueGrid[index, 2].Editor = null;
                             issueGrid[index, 3] = new SourceGrid.Cells.Cell((!String.IsNullOrEmpty(issue.Summary) ? issue.Summary.ToString() : ""), typeof(string));
@@ -521,10 +526,10 @@ namespace GRiD_Subtask_Editor
             //  TODO:   Make project configurable
             //  TODO:   Make issue type selection configurable
             issuesFromJira = from issue in jira.Issues.Queryable
-                             where issue.Assignee == userConfig.Username &&
-                             issue.Project == "e-terrapipeline" &&
+                             where (issue.Assignee == userConfig.Username) &&
+                             (issue.Project == Properties.Settings.Default.ProjectName) &&
                              (issue.Type == "Defect" || issue.Type == "Story" || issue.Type == "Task") &&
-                             issue.Status != "Done"
+                             (issue.Status != "Done" && issue.Status != "Complete")
                              orderby issue.Created
                              select issue;
 
@@ -582,7 +587,7 @@ namespace GRiD_Subtask_Editor
                 if (Regex.IsMatch(tbETPLItem.Text.ToString(), @"^\d+$"))
                 {
                     // convert entry to ETPL-XXXX
-                    tbETPLItem.Text = "ETPL-" + tbETPLItem.Text;
+                    tbETPLItem.Text = Properties.Settings.Default.ProjectPrefix + "_" + tbETPLItem.Text;
                 }
 
                 parentIssue = getIssue(tbETPLItem.Text);
